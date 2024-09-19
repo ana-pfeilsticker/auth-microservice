@@ -1,7 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
+  Query,
   Res,
   UnauthorizedException,
   UsePipes,
@@ -31,6 +34,12 @@ export class AuthController {
       throw new UnauthorizedException('Email ou senha incorretos');
     }
 
+    if (!user.isConfirmed) {
+      throw new UnauthorizedException(
+        'Por favor valide seu email para liberar a conta',
+      );
+    }
+
     const token = await this.authService.login(user);
 
     res.cookie('jwt', token.access_token, {
@@ -50,5 +59,22 @@ export class AuthController {
     });
 
     return { message: 'Login realizado com sucesso', csrfToken };
+  }
+
+  @Get('confirm-email')
+  async confirmEmail(@Query('token') token: string) {
+    if (!token) {
+      throw new BadRequestException('Token de confirmação é necessário!');
+    }
+
+    try {
+      await this.authService.confirmEmail(token);
+      return { message: 'E-mail confirmado com sucesso!' };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
   }
 }

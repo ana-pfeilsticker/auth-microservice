@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  BadRequestException,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -25,6 +18,14 @@ export class UsersController {
     const newUser = await this.userService.createUser(createUserDto);
 
     const { password, ...result } = newUser;
+
+    const confirmationEmailToken =
+      await this.userService.generateEmailConfirmationToken(newUser.id);
+
+    await this.userService.sendConfirmationEmail(
+      newUser.email,
+      confirmationEmailToken,
+    );
 
     return result;
   }
