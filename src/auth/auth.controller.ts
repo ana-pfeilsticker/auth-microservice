@@ -2,12 +2,15 @@ import {
   Body,
   Controller,
   Post,
+  Res,
   UnauthorizedException,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { Response } from 'express';
+import * as crypto from 'crypto';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +18,10 @@ export class AuthController {
 
   @UsePipes(new ValidationPipe())
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const user = await this.authService.validadeUser(
       loginDto.email,
       loginDto.password,
@@ -25,6 +31,24 @@ export class AuthController {
       throw new UnauthorizedException('Email ou senha incorretos');
     }
 
-    return this.authService.login(user);
+    const token = await this.authService.login(user);
+
+    res.cookie('jwt', token.access_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 4 * 60 * 60 * 1000,
+    });
+
+    const csrfToken = crypto.randomBytes(24).toString('hex');
+
+    res.cookie('csrf_token', csrfToken, {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 14400000,
+    });
+
+    return { message: 'Login realizado com sucesso', csrfToken };
   }
 }
