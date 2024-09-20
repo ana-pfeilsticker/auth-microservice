@@ -56,11 +56,14 @@ export class UsersService {
       purpose: 'email_confirmation',
     };
 
-    return this.jwtService.sign(payload, { expiresIn: '24h' });
+    return this.jwtService.sign(payload, {
+      algorithm: 'RS256',
+      expiresIn: '24h',
+    });
   }
 
   async sendConfirmationEmail(email: string, token: string): Promise<void> {
-    const confirmationUrl = `http://localhost:3000/auth/confirm-email?token=${token}`;
+    const confirmationUrl = `http://localhost:3000/confirm-email?token=${token}`;
     const message = {
       email,
       confirmationUrl,

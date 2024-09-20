@@ -12,18 +12,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   imports: [
     PrismaModule,
     HttpModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule], // Importa o ConfigModule para acessar variáveis de ambiente
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret:
-          configService.get<string>('JWT_SECRET') ||
-          fs.readFileSync(getKeyPath('public.pem'), 'utf8'),
-        signOptions: {
-          algorithm: 'RS256',
-          expiresIn: '4h',
-        },
-      }),
+    JwtModule.register({
+      privateKey: fs.readFileSync(getKeyPath('private.pem')),
+
+      publicKey: fs.readFileSync(getKeyPath('public.pem')),
+      signOptions: {
+        algorithm: 'RS256',
+        expiresIn: '4h',
+      },
     }),
   ],
   providers: [UsersService],

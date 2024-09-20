@@ -21,10 +21,15 @@ export class UsersController {
 
     const confirmationEmailToken =
       await this.userService.generateEmailConfirmationToken(newUser.id);
+    console.log(`Token de confirmação gerado para usuário ID: ${newUser.id}`);
 
     await this.userService.sendConfirmationEmail(
       newUser.email,
       confirmationEmailToken,
+    );
+
+    console.log(
+      `Requisição para enviar e-mail de confirmação para: ${newUser.email}`,
     );
 
     return result;
