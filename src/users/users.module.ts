@@ -6,7 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import * as fs from 'fs';
 import { getKeyPath } from '../utils/getKeyPath';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
@@ -21,6 +21,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         expiresIn: '4h',
       },
     }),
+    EmailModule,
   ],
   providers: [UsersService],
   controllers: [UsersController],

@@ -5,8 +5,10 @@ import {
   Get,
   Post,
   Query,
+  Req,
   Res,
   UnauthorizedException,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -14,6 +16,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
 import * as crypto from 'crypto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -76,5 +79,25 @@ export class AuthController {
       }
       throw error;
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Req() req: Request, @Res() res: Response) {
+    res.cookie('jwt', '', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      expires: new Date(0),
+    });
+
+    res.cookie('csrfToken', '', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      expires: new Date(0),
+    });
+
+    res.json({ message: 'Logout realizado com sucesso.' });
   }
 }

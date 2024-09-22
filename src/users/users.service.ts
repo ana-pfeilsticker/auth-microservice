@@ -1,19 +1,18 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { User, Prisma } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class UsersService {
-  private readonly logger = new Logger(UsersService.name);
-
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private httpService: HttpService,
+    @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
   ) {}
 
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
@@ -69,17 +68,6 @@ export class UsersService {
       confirmationUrl,
     };
 
-    try {
-      const emailServiceUrl =
-        'http://localhost:4000/email/send-confirmation-email';
-
-      await lastValueFrom(
-        this.httpService.post(emailServiceUrl, message, {
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      );
-    } catch (error) {
-      throw new BadRequestException('Erro ao enviar e-mail de confirmação');
-    }
+    this.emailService.emit('send_confirmation_email', message);
   }
 }
